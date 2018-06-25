@@ -3,17 +3,8 @@ from imgaug import augmenters as iaa
 import numpy as np
 
 
-class NormalizedOperation(object):
-  def __init__(self, operation_name="", magnitude=1.0):
-    self.imgaug_operation = None
-
-    if operation_name == "Fliplr":
-      actual
-      self.imgaug_operation = iaa.Fliplr(0.5)
-
-
 class AutoImgaugOperation(object):
-  def __init__(self, operation_name="", magnitude=1.0, probability=1.0):
+  def __init__(self, operation_name="Fliplr", magnitude=1.0, probability=1.0):
     # translation, rotation, or shearing,
     # 16 operators: ShearX/Y, TranslateX/Y, Rotate, AutoContrast, Invert, Equalize, Solarize, Posterize, Contrast, Color, Brightness, Sharpness, Cutout, Sample Pairing
     self.operation_name = operation_name
@@ -21,7 +12,13 @@ class AutoImgaugOperation(object):
     self.magnitude = magnitude
     # 11 values: [0, 10],
     self.probability = probability
-    self.imgaug_operation = self.normalized_to_imgaug_operation()
+    self.imgaug_operation = self.normalized_to_imgaug_operation(
+        self.operation_name, self.magnitude)
+
+  def __str__(self):
+    return "operation: {}, magnitude: {}, probability: {}, imgaug_operation: {}".format(
+        self.operation_name, self.magnitude, self.probability,
+        self.imgaug_operation)
 
   def normalized_to_imgaug_operation(self, operation_name, magnitude):
     # TODO: Make this to static method
@@ -37,52 +34,8 @@ class AutoImgaugOperation(object):
     return imgaug_operation
 
   def process(self, input_ndarray):
-
-    #ia.seed(1)
-
-    # Example batch of images.
-    # The array has shape (32, 64, 64, 3) and dtype uint8.
-    """
-    images = np.array(
-            [ia.quokka(size=(64, 64)) for _ in range(32)],
-            dtype=np.uint8
-    )
-    """
-
-    seq = iaa.Sequential(
-        [
-            iaa.Fliplr(0.5),  # horizontal flips
-            iaa.Crop(percent=(0, 0.1)),  # random crops
-            # Small gaussian blur with random sigma between 0 and 0.5.
-            # But we only blur about 50% of all images.
-            iaa.Sometimes(0.5, iaa.GaussianBlur(sigma=(0, 0.5))),
-            # Strengthen or weaken the contrast in each image.
-            iaa.ContrastNormalization((0.75, 1.5)),
-            # Add gaussian noise.
-            # For 50% of all images, we sample the noise once per pixel.
-            # For the other 50% of all images, we sample the noise per pixel AND
-            # channel. This can change the color (not only brightness) of the
-            # pixels.
-            iaa.AdditiveGaussianNoise(
-                loc=0, scale=(0.0, 0.05 * 255), per_channel=0.5),
-            # Make some images brighter and some darker.
-            # In 20% of all cases, we sample the multiplier once per channel,
-            # which can end up changing the color of the images.
-            iaa.Multiply((0.8, 1.2), per_channel=0.2),
-            # Apply affine transformations to each image.
-            # Scale/zoom them, translate/move them, rotate them and shear them.
-            iaa.Affine(
-                scale={"x": (0.8, 1.2),
-                       "y": (0.8, 1.2)},
-                translate_percent={"x": (-0.2, 0.2),
-                                   "y": (-0.2, 0.2)},
-                rotate=(-25, 25),
-                shear=(-8, 8))
-        ],
-        random_order=True)  # apply augmenters in random order
-
+    seq = iaa.Sequential([self.imgaug_operation], random_order=True)
     output_ndarray = seq.augment_images(input_ndarray)
-
     return output_ndarray
 
 
@@ -90,6 +43,9 @@ class AutoImgaugPolicy(object):
   def __init__(self):
     self.num_of_operations = 3
     self.operations = []
+
+  def __str__(self):
+    return "operations: {}".format(self.operations)
 
   def init_with_params(self, params):
     operation1 = AutoImgaugOperation(params["operation_name1"],
@@ -105,15 +61,29 @@ class AutoImgaugPolicy(object):
     self.operations = [operation1, operation2, operation3]
 
   def init_with_default_operations(self):
-    operation1 = AutoImgaugOperation("Rotate", 5, 0.7)
-    operation2 = AutoImgaugOperation("Invert", 7, 0.2)
-    operation3 = AutoImgaugOperation("Brightness", 9, 0.8)
+    operation1 = AutoImgaugOperation("Fliplr", 5, 0.7)
+    operation2 = AutoImgaugOperation("Crop", 7, 0.2)
+    operation3 = AutoImgaugOperation("Fliplr", 9, 0.8)
 
     self.operations = [operation1, operation2, operation3]
 
   def process(self, input_ndarray):
+    """  
     output_ndarray = input_ndarray
     for operation in self.operations:
       output_ndarray = operation.process(output_ndarray)
+
+    return output_ndarray
+    """
+
+    imgaug_sequential_list = []
+
+    for operation in self.operations:
+      imgaug_sequential_list.append(operation.imgaug_operation)
+
+    imgaug_sequential = iaa.Sequential(
+        imgaug_sequential_list, random_order=False)
+
+    output_ndarray = imgaug_sequential.augment_images(input_ndarray)
 
     return output_ndarray
