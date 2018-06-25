@@ -52,7 +52,7 @@ class AutoImgaugPolicy(object):
   def init_with_default_operations(self):
     operation1 = AutoImgaugOperation("Fliplr", 5, 0.7)
     operation2 = AutoImgaugOperation("Crop", 7, 0.2)
-    operation3 = AutoImgaugOperation("Fliplr", 9, 0.8)
+    operation3 = AutoImgaugOperation("GaussianBlur", 9, 0.8)
 
     self.operations = [operation1, operation2, operation3]
 
