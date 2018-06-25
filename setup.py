@@ -22,7 +22,7 @@ except ImportError:
   from distutils.core import setup
 
 setup(name="auto_imgaug",
-      version="0.0.1",
+      version="0.0.2",
       author="tobe",
       author_email="tobeg3oogle@gmail.com",
       url="https://github.com/tobegit3hub/auto_imgaug",
