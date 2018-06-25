@@ -3,6 +3,15 @@ from imgaug import augmenters as iaa
 import numpy as np
 
 
+class NormalizedOperation(object):
+  def __init__(self, operation_name="", magnitude=1.0):
+    self.imgaug_operation = None
+
+    if operation_name == "Fliplr":
+      actual
+      self.imgaug_operation = iaa.Fliplr(0.5)
+
+
 class AutoImgaugOperation(object):
   def __init__(self, operation_name="", magnitude=1.0, probability=1.0):
     # translation, rotation, or shearing,
@@ -12,6 +21,20 @@ class AutoImgaugOperation(object):
     self.magnitude = magnitude
     # 11 values: [0, 10],
     self.probability = probability
+    self.imgaug_operation = self.normalized_to_imgaug_operation()
+
+  def normalized_to_imgaug_operation(self, operation_name, magnitude):
+    # TODO: Make this to static method
+    imgaug_operation = None
+
+    if operation_name == "Fliplr":
+      imgaug_magnitude = 0.5
+      imgaug_operation = iaa.Fliplr(imgaug_magnitude)
+    elif operation_name == "Crop":
+      imgaug_magnitude = 0.5
+      imgaug_operation = iaa.Crop(percent=(0, 0.1))
+
+    return imgaug_operation
 
   def process(self, input_ndarray):
 
