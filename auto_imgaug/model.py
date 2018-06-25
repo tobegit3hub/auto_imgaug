@@ -13,7 +13,7 @@ class AutoImgaugOperation(object):
     # 11 values: [0, 10],
     self.probability = probability
 
-  def do_run(self, input_ndarray):
+  def process(self, input_ndarray):
 
     #ia.seed(1)
 
@@ -65,10 +65,32 @@ class AutoImgaugOperation(object):
 
 class AutoImgaugPolicy(object):
   def __init__(self):
+    self.num_of_operations = 3
     self.operations = []
 
-  def init(self, params):
-    pass
+  def init_with_params(self, params):
+    operation1 = AutoImgaugOperation(params["operation_name1"],
+                                     params["magnitude1"],
+                                     params["probability1"])
+    operation2 = AutoImgaugOperation(params["operation_name2"],
+                                     params["magnitude2"],
+                                     params["probability2"])
+    operation3 = AutoImgaugOperation(params["operation_name3"],
+                                     params["magnitude3"],
+                                     params["probability3"])
 
-  def process_ndarray(self, ndarray):
-    pass
+    self.operations = [operation1, operation2, operation3]
+
+  def init_with_default_operations(self):
+    operation1 = AutoImgaugOperation("Rotate", 5, 0.7)
+    operation2 = AutoImgaugOperation("Invert", 7, 0.2)
+    operation3 = AutoImgaugOperation("Brightness", 9, 0.8)
+
+    self.operations = [operation1, operation2, operation3]
+
+  def process(self, input_ndarray):
+    output_ndarray = input_ndarray
+    for operation in self.operations:
+      output_ndarray = operation.process(output_ndarray)
+
+    return output_ndarray
