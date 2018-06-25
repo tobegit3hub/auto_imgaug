@@ -2,6 +2,8 @@ import imgaug as ia
 from imgaug import augmenters as iaa
 import numpy as np
 
+from normalize_util import NormalizedUtil
+
 
 class AutoImgaugOperation(object):
   def __init__(self, operation_name="Fliplr", magnitude=1.0, probability=1.0):
@@ -12,26 +14,13 @@ class AutoImgaugOperation(object):
     self.magnitude = magnitude
     # 11 values: [0, 10],
     self.probability = probability
-    self.imgaug_operation = self.normalized_to_imgaug_operation(
+    self.imgaug_operation = NormalizedUtil.normalized_operation_to_imgaug_operation(
         self.operation_name, self.magnitude)
 
   def __str__(self):
     return "operation: {}, magnitude: {}, probability: {}, imgaug_operation: {}".format(
         self.operation_name, self.magnitude, self.probability,
         self.imgaug_operation)
-
-  def normalized_to_imgaug_operation(self, operation_name, magnitude):
-    # TODO: Make this to static method
-    imgaug_operation = None
-
-    if operation_name == "Fliplr":
-      imgaug_magnitude = 0.5
-      imgaug_operation = iaa.Fliplr(imgaug_magnitude)
-    elif operation_name == "Crop":
-      imgaug_magnitude = 0.5
-      imgaug_operation = iaa.Crop(percent=(0, 0.1))
-
-    return imgaug_operation
 
   def process(self, input_ndarray):
     seq = iaa.Sequential([self.imgaug_operation], random_order=True)
@@ -40,8 +29,8 @@ class AutoImgaugOperation(object):
 
 
 class AutoImgaugPolicy(object):
-  def __init__(self):
-    self.num_of_operations = 3
+  def __init__(self, num_of_operations=3):
+    self.num_of_operations = num_of_operations
     self.operations = []
 
   def __str__(self):
